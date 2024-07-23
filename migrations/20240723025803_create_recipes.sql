@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    name TEXT,
+    name TEXT NOT NULL,
     description TEXT,
+    hidden BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
