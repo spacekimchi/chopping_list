@@ -64,6 +64,7 @@ pub enum Error {
     #[error(transparent)]
     Sqlx(#[from] sqlx::Error),
 
+    // This TaskJoin error is for things like task::spawn_blocking in the authenticate() function
     #[error(transparent)]
     TaskJoin(#[from] task::JoinError),
 }

@@ -4,6 +4,10 @@ CREATE TABLE IF NOT EXISTS recipes (
     name TEXT NOT NULL,
     description TEXT,
     hidden BOOLEAN DEFAULT TRUE,
+    prep_time INTEGER,
+    cook_time INTEGER,
+    rest_time INTEGER,
+    servings INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

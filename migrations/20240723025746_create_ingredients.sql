@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS ingredients (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
+    description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
