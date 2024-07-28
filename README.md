@@ -89,7 +89,7 @@ The scss will be compiled when the project starts using the [grass crate](https:
 
 The project is set up to compile any scss files in the `scss/` directory.
 
-This way, we only need to build the project with cargo. No javascript building involved!
+This way, we only need to build the project with cargo. No javascript build dependencies involved!
 
 ## Javascript
 
