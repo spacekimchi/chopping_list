@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS recipes_tags (
 );
 
 CREATE INDEX idx_recipes_tags_tag_id ON recipes_tags(tag_id);
-CREATE INDEX idx_recipes_tags_ingredient_id ON recipes_tags(recipe_id);
-CREATE UNIQUE INDEX idx_recipes_tags_rec_ing_ins ON recipes_tags(tag_id, recipe_id);
+CREATE INDEX idx_recipes_tags_recipe_id ON recipes_tags(recipe_id);
+CREATE UNIQUE INDEX idx_recipes_tags_rec_tag ON recipes_tags(tag_id, recipe_id);
 
 CREATE TRIGGER update_recipes_tags_updated_at
 BEFORE UPDATE ON recipes_tags
