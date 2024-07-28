@@ -25,7 +25,7 @@ DB_HOST="${POSTGRES_HOST:=localhost}"
 if [[ -z "${SKIP_DOCKER}" ]]
 then
     # if a postgres container is running, print instructions to kill it and exit
-    RUNNING_POSTGRES_CONTAINER=$(docker ps --filter 'name=postgres' --format '{{.ID}}')
+    RUNNING_POSTGRES_CONTAINER=$(docker ps --filter 'name=chopping_list_pg' --format '{{.ID}}')
     if [[ -n $RUNNING_POSTGRES_CONTAINER ]]; then
         echo >&2 "there is a postgres container already running, kill it with"
         echo >&2 "    docker kill ${RUNNING_POSTGRES_CONTAINER}"
@@ -38,7 +38,7 @@ then
         -e POSTGRES_DB=${DB_NAME} \
         -p "${DB_PORT}":5432 \
         -d \
-        --name "postgres_$(date '+%s')" \
+        --name "chopping_list_pg_$(date '+%s')" \
         postgres -N 1000
             # ^ Increased maximum number of connections for testing purposes
 fi
@@ -53,6 +53,6 @@ done
 
 export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
 sqlx database create
-# sqlx migrate run
+sqlx migrate run
 
 >&2 echo "Postgres has been migrated, ready to go!"

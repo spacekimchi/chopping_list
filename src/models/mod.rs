@@ -1,6 +1,7 @@
 pub mod ingredient;
 pub mod recipe;
-pub mod recipe_ingredient;
+pub mod recipe_component;
+pub mod recipe_component_ingredient;
 pub mod tag;
 pub mod user;
 pub mod user_role;

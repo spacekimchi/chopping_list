@@ -6,7 +6,8 @@ use chopping_list::models::recipe_instruction_step::{RecipeInstructionStep, Crea
 use chopping_list::models::recipe_instruction::{RecipeInstruction, CreateRecipeInstructionParams};
 use chopping_list::models::unit::Unit;
 use chopping_list::models::ingredient::{Ingredient, CreateIngredientParams};
-use chopping_list::models::recipe_ingredient::{RecipeIngredient, CreateRecipeIngredientParams};
+use chopping_list::models::recipe_component::{RecipeComponent, CreateRecipeComponentParams};
+use chopping_list::models::recipe_component_ingredient::{RecipeComponentIngredient, CreateRecipeComponentIngredientParams};
 use chopping_list::models::unit;
 use fake::faker::internet::en::SafeEmail;
 use fake::Fake;
@@ -31,7 +32,7 @@ pub async fn create_random_user(db: &sqlx::PgPool) -> Result<Option<User>, chopp
 }
 
 async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, chopping_list::models::Error> {
-    // 1. Create the recipe
+    // 1. Create the recipe (unchanged)
     let recipe_params = CreateRecipeParams {
         user_id: user.id,
         name: "Habichuelas Guisadas (Puerto Rican Stewed Beans)".to_string(),
@@ -46,7 +47,15 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
 
     let recipe = Recipe::create(db, &recipe_params).await?.expect("Failed to create recipe");
 
-    // 2. Create ingredients and recipe ingredients
+    // 2. Create recipe component
+    let component_params = CreateRecipeComponentParams {
+        recipe_id: recipe.id,
+        name: "Main Ingredients".to_string(),
+        is_optional: false,
+    };
+    let component = RecipeComponent::create(db, &component_params).await?.expect("Failed to create recipe component");
+
+    // 3. Create ingredients and recipe component ingredients
     let ingredients = vec![
         ("Olive oil", "tablespoon", 1, 1, false),
         ("Country ham", "cup", 1, 4, true),
@@ -75,8 +84,8 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
 
         let unit = Unit::find_by_name(db, unit_name).await?.expect("Unit not found");
 
-        let recipe_ing_params = CreateRecipeIngredientParams {
-            recipe_id: recipe.id,
+        let recipe_ing_params = CreateRecipeComponentIngredientParams {
+            recipe_component_id: component.id,
             ingredient_id: ingredient.id,
             unit_id: unit.id,
             quantity_numerator: quantity_num,
@@ -84,10 +93,10 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
             is_optional,
         };
 
-        RecipeIngredient::create(db, &recipe_ing_params).await?;
+        RecipeComponentIngredient::create(db, &recipe_ing_params).await?;
     }
 
-    // 3. Create recipe instructions
+    // 4. Create recipe instructions (unchanged)
     let instructions = vec![
         CreateRecipeInstructionParams {
             recipe_id: recipe.id,
@@ -100,7 +109,7 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
         RecipeInstruction::create(db, &instruction).await?;
     }
 
-    // 4. Create recipe instruction steps
+    // 5. Create recipe instruction steps (unchanged)
     let steps = vec![
         (1, "In a medium-sized saucepan, heat the olive oil over medium heat. Add the chopped ham and sauté for 2-3 minutes until it starts to caramelize."),
         (1, "Add the sofrito and Sazón seasoning. Sauté for 2 minutes until fragrant."),
@@ -123,19 +132,19 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
         };
 
         RecipeInstructionStep::create(db, &step_params).await?;
-    }
+        }
 
-    // 5. Add tags
+    // 6. Add tags (unchanged)
     let tags = vec!["Puerto Rican", "Beans", "Stew"];
     for tag_name in tags {
         recipe.add_tag(db, tag_name).await?;
-    }
+        }
 
     Ok(recipe)
 }
 
 async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping_list::models::Error> {
-    // 1. Create the recipe
+    // 1. Create the recipe (unchanged)
     let recipe_params = CreateRecipeParams {
         user_id: user.id,
         name: "Kimchi Stew (Kimchi Jjigae)".to_string(),
@@ -150,27 +159,45 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
 
     let recipe = Recipe::create(db, &recipe_params).await?.expect("Failed to create recipe");
 
-    // 2. Create ingredients and recipe ingredients
-    let ingredients = vec![
-        ("Kimchi", "pound", 1, 1, false),
-        ("Kimchi brine", "cup", 1, 4, false),
-        ("Pork shoulder or pork belly", "pound", 1, 2, false),
-        ("Tofu", "package", 1, 2, true),
-        ("Green onions", "piece", 3, 1, false),
-        ("Onion", "piece", 1, 1, false),
-        ("Kosher salt", "teaspoon", 1, 1, false),
-        ("Sugar", "teaspoon", 2, 1, false),
-        ("Gochugaru (Korean hot pepper flakes)", "teaspoon", 2, 1, false),
-        ("Gochujang (Korean hot pepper paste)", "tablespoon", 1, 1, false),
-        ("Toasted sesame oil", "teaspoon", 1, 1, false),
-        ("Anchovy stock (or chicken or beef broth)", "cup", 2, 1, false),
-        ("Dried anchovies", "piece", 7, 1, false),
-        ("Korean radish (or daikon radish)", "cup", 1, 3, false),
-        ("Dried kelp", "piece", 1, 1, false),
-        ("Water", "cup", 4, 1, false),
+    // 2. Create recipe components
+    let components = vec![
+        ("For the Kimchi Stew", false),
+        ("For the Anchovy Stock", false),
     ];
 
-    for (name, unit_name, quantity_num, quantity_denom, is_optional) in ingredients {
+    for (component_name, is_optional) in components {
+        let component_params = CreateRecipeComponentParams {
+            recipe_id: recipe.id,
+            name: component_name.to_string(),
+            is_optional
+        };
+        RecipeComponent::create(db, &component_params).await?;
+    }
+
+    // 3. Create ingredients and recipe component ingredients
+    let ingredients = vec![
+        ("For the Kimchi Stew", "Kimchi", "pound", 1, 1, false),
+        ("For the Kimchi Stew", "Kimchi brine", "cup", 1, 4, false),
+        ("For the Kimchi Stew", "Pork shoulder or pork belly", "pound", 1, 2, false),
+        ("For the Kimchi Stew", "Tofu", "package", 1, 2, true),
+        ("For the Kimchi Stew", "Green onions", "piece", 3, 1, false),
+        ("For the Kimchi Stew", "Onion", "piece", 1, 1, false),
+        ("For the Kimchi Stew", "Kosher salt", "teaspoon", 1, 1, false),
+        ("For the Kimchi Stew", "Sugar", "teaspoon", 2, 1, false),
+        ("For the Kimchi Stew", "Gochugaru (Korean hot pepper flakes)", "teaspoon", 2, 1, false),
+        ("For the Kimchi Stew", "Gochujang (Korean hot pepper paste)", "tablespoon", 1, 1, false),
+        ("For the Kimchi Stew", "Toasted sesame oil", "teaspoon", 1, 1, false),
+        ("For the Kimchi Stew", "Anchovy stock (or chicken or beef broth)", "cup", 2, 1, false),
+        ("For the Anchovy Stock", "Dried anchovies", "piece", 7, 1, false),
+        ("For the Anchovy Stock", "Korean radish (or daikon radish)", "cup", 1, 3, false),
+        ("For the Anchovy Stock", "Dried kelp", "piece", 1, 1, false),
+        ("For the Anchovy Stock", "Water", "cup", 4, 1, false),
+    ];
+
+    for (component_name, name, unit_name, quantity_num, quantity_denom, is_optional) in ingredients {
+        let component = RecipeComponent::find_by_recipe_id_and_name(db, recipe.id, &component_name.to_string()).await?
+            .expect("Recipe component not found");
+
         let ingredient = match Ingredient::find_by_name(db, name).await? {
             Some(ing) => ing,
             None => {
@@ -181,8 +208,8 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
 
         let unit = Unit::find_by_name(db, unit_name).await?.expect("Unit not found");
 
-        let recipe_ing_params = CreateRecipeIngredientParams {
-            recipe_id: recipe.id,
+        let recipe_ing_params = CreateRecipeComponentIngredientParams {
+            recipe_component_id: component.id,
             ingredient_id: ingredient.id,
             unit_id: unit.id,
             quantity_numerator: quantity_num,
@@ -190,10 +217,10 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
             is_optional,
         };
 
-        RecipeIngredient::create(db, &recipe_ing_params).await?;
+        RecipeComponentIngredient::create(db, &recipe_ing_params).await?;
     }
 
-    // 3. Create recipe instructions
+    // 4. Create recipe instructions
     let instructions = vec![
         CreateRecipeInstructionParams {
             recipe_id: recipe.id,
@@ -211,7 +238,7 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
         RecipeInstruction::create(db, &instruction).await?;
     }
 
-    // 4. Create recipe instruction steps
+    // 5. Create recipe instruction steps
     let steps = vec![
         (1, "Combine dried anchovies, radish, green onion roots, and dried kelp in a saucepan."),
         (1, "Add water and bring to a boil over medium-high heat."),
@@ -241,13 +268,13 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
         };
 
         RecipeInstructionStep::create(db, &step_params).await?;
-    }
+        }
 
-    // 5. Add tags
+    // 6. Add tags
     let tags = vec!["Korean", "Stew", "Spicy", "Kimchi"];
     for tag_name in tags {
         recipe.add_tag(db, tag_name).await?;
-    }
+        }
 
     Ok(recipe)
 }
