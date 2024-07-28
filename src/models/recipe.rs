@@ -1,51 +1,48 @@
 use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, PgPool};
 
-#[derive(Clone, Serialize, Deserialize, FromRow)]
+use crate::models::tag::{Tag, CreateTagParams};
+use crate::models::ingredient::{Ingredient, CreateIngredientParams};
+use crate::models::recipe_tag::{RecipeTag, CreateRecipeTagParams};
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Recipe {
-    pub id: i64,
+    pub id: i32,
     pub user_id: uuid::Uuid,
     pub name: String,
     pub description: Option<String>,
-    pub hidden: Option<bool>,
-    pub prep_time: Option<i64>,
-    pub cook_time: Option<i64>,
-    pub servings: Option<i64>,
+    pub is_public: bool,
+    pub prep_time: Option<i32>,
+    pub cook_time: Option<i32>,
+    pub servings: Option<i32>,
+    pub source_url: Option<String>,
 }
 
-pub struct CreateParams {
+pub struct CreateRecipeParams {
     pub user_id: uuid::Uuid,
     pub name: String,
     pub description: Option<String>,
-    pub hidden: Option<bool>,
-    pub prep_time: Option<i64>,
-    pub cook_time: Option<i64>,
-    pub rest_time: Option<i64>,
-    pub servings: Option<i64>,
+    pub is_public: bool,
+    pub prep_time: Option<i32>,
+    pub cook_time: Option<i32>,
+    pub rest_time: Option<i32>,
+    pub servings: Option<i32>,
+    pub source_url: Option<String>,
 }
 
-impl CreateParams {
+impl CreateRecipeParams {
     pub fn new(user_id: uuid::Uuid, name: String) -> Self {
         Self {
             user_id,
             name,
             description: None,
-            hidden: None,
+            is_public: false,
             prep_time: None,
             cook_time: None,
             rest_time: None,
             servings: None,
+            source_url: None,
         }
-    }
-
-    pub fn with_hidden(mut self) -> Self {
-        self.hidden = Some(true);
-        self
-    }
-
-    pub fn with_name(mut self, name: String) -> Self {
-        self.name = name;
-        self
     }
 
     pub fn with_description(mut self, description: String) -> Self {
@@ -53,42 +50,79 @@ impl CreateParams {
         self
     }
 
-    pub fn with_cook_time(mut self, cook_time: i64) -> Self {
+    pub fn with_cook_time(mut self, cook_time: i32) -> Self {
         self.cook_time = Some(cook_time);
         self
     }
 
-    pub fn with_prep_time(mut self, prep_time: i64) -> Self {
+    pub fn with_prep_time(mut self, prep_time: i32) -> Self {
         self.prep_time = Some(prep_time);
         self
     }
 
-    pub fn with_rest_time(mut self, rest_time: i64) -> Self {
+    pub fn with_rest_time(mut self, rest_time: i32) -> Self {
         self.rest_time = Some(rest_time);
         self
     }
 
-    pub fn with_servings(mut self, servings: i64) -> Self {
+    pub fn with_servings(mut self, servings: i32) -> Self {
         self.servings = Some(servings);
+        self
+    }
+
+    pub fn with_source_url(mut self, source_url: String) -> Self {
+        self.source_url = Some(source_url);
         self
     }
 }
 
 impl Recipe {
-    pub async fn create_recipe(db: &PgPool, create_params: &CreateParams) -> Result<Option<Self>, crate::models::Error> {
+    pub async fn create(db: &PgPool, create_params: &CreateRecipeParams) -> Result<Option<Self>, crate::models::Error> {
         // Just bind everything. If it is None, it will convert to NULL
-        let recipe = sqlx::query_as("INSERT INTO recipes (user_id, name, description, hidden, prep_time, cook_time, rest_time, servings) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *")
+        let recipe = sqlx::query_as(
+            "INSERT INTO recipes (user_id, name, description, is_public, prep_time, cook_time, rest_time, servings, source_url)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING *"
+             )
             .bind(create_params.user_id)
-            .bind(create_params.name.clone())
-            .bind(create_params.description.clone())
-            .bind(create_params.hidden)
+            .bind(&create_params.name)
+            .bind(&create_params.description)
+            .bind(create_params.is_public)
             .bind(create_params.prep_time)
             .bind(create_params.cook_time)
             .bind(create_params.rest_time)
             .bind(create_params.servings)
+            .bind(&create_params.source_url)
             .fetch_optional(db)
             .await?;
         Ok(recipe)
+    }
+
+    pub async fn add_tag(&self, db: &PgPool, tag_name: &str) -> Result<(), crate::models::Error> {
+        let tag = match Tag::find_by_name(db, tag_name).await? {
+            Some(t) => t,
+            None => {
+                let tag_params = CreateTagParams { name: tag_name.to_string() };
+                Tag::create(db, &tag_params).await?.expect("Failed to create tag")
+            }
+        };
+
+        let recipe_tag_params = CreateRecipeTagParams {
+            recipe_id: self.id,
+            tag_id: tag.id,
+        };
+
+        RecipeTag::create(db, &recipe_tag_params).await?;
+
+        Ok(())
+    }
+
+    pub async fn get_ingredients(&self, db: &PgPool) -> Result<Vec<Ingredient>, crate::models::Error> {
+        Ok(Ingredient::get_ingredients_by_recipe_id(db, self.id).await?)
+    }
+
+    pub async fn get_tags(&self, db: &PgPool) -> Result<Vec<Tag>, crate::models::Error> {
+        Ok(Tag::find_by_recipe_id(db, self.id).await?)
     }
 }
 

@@ -3,11 +3,12 @@ CREATE TABLE IF NOT EXISTS recipes (
     user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
-    hidden BOOLEAN DEFAULT TRUE,
+    is_public BOOLEAN DEFAULT FALSE,
     prep_time INTEGER,
     cook_time INTEGER,
     rest_time INTEGER,
     servings INTEGER,
+    source_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
