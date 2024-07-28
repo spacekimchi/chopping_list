@@ -91,7 +91,7 @@ The project is set up to compile any scss files in the `scss/` directory.
 
 This way, we only need to build the project with cargo. No javascript build dependencies involved!
 
-## Javascript
+Instead, we can use vanilla Javascript and HTMX to get a SPA feeling.
 
 Add javascript files to /static/js/ directory and include them in the html wherever they are needed
 
