@@ -2,9 +2,9 @@ use serde::{Serialize, Deserialize};
 use sqlx::{FromRow, PgPool};
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct RecipeIngredient {
+pub struct RecipeComponentIngredient {
     pub id: i32,
-    pub recipe_id: i32,
+    pub recipe_component_id: i32,
     pub ingredient_id: i32,
     pub unit_id: i32,
     pub quantity_numerator: i32,
@@ -12,8 +12,8 @@ pub struct RecipeIngredient {
     pub is_optional: bool,
 }
 
-pub struct CreateRecipeIngredientParams {
-    pub recipe_id: i32,
+pub struct CreateRecipeComponentIngredientParams {
+    pub recipe_component_id: i32,
     pub ingredient_id: i32,
     pub unit_id: i32,
     pub quantity_numerator: i32,
@@ -21,16 +21,16 @@ pub struct CreateRecipeIngredientParams {
     pub is_optional: bool,
 }
 
-impl CreateRecipeIngredientParams {
+impl CreateRecipeComponentIngredientParams {
     pub fn new(
-        recipe_id: i32,
+        recipe_component_id: i32,
         ingredient_id: i32,
         unit_id: i32,
         quantity_numerator: i32,
         quantity_denominator: i32,
     ) -> Self {
         Self {
-            recipe_id,
+            recipe_component_id,
             ingredient_id,
             unit_id,
             quantity_numerator,
@@ -45,14 +45,14 @@ impl CreateRecipeIngredientParams {
     }
 }
 
-impl RecipeIngredient {
-    pub async fn create(db: &PgPool, create_params: &CreateRecipeIngredientParams) -> Result<Option<Self>, crate::models::Error> {
-        let recipe_ingredient = sqlx::query_as(
-            "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, unit_id, quantity_numerator, quantity_denominator, is_optional)
+impl RecipeComponentIngredient {
+    pub async fn create(db: &PgPool, create_params: &CreateRecipeComponentIngredientParams) -> Result<Option<Self>, crate::models::Error> {
+        let recipe_component_ingredient = sqlx::query_as(
+            "INSERT INTO recipe_component_ingredients (recipe_component_id, ingredient_id, unit_id, quantity_numerator, quantity_denominator, is_optional)
              VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *"
         )
-        .bind(create_params.recipe_id)
+        .bind(create_params.recipe_component_id)
         .bind(create_params.ingredient_id)
         .bind(create_params.unit_id)
         .bind(create_params.quantity_numerator)
@@ -61,26 +61,26 @@ impl RecipeIngredient {
         .fetch_optional(db)
         .await?;
 
-        Ok(recipe_ingredient)
+        Ok(recipe_component_ingredient)
     }
 
     pub async fn find_by_id(db: &PgPool, id: i32) -> Result<Option<Self>, crate::models::Error> {
-        let recipe_ingredient = sqlx::query_as("SELECT * FROM recipe_ingredients WHERE id = $1")
+        let recipe_component_ingredient = sqlx::query_as("SELECT * FROM recipe_component_ingredients WHERE id = $1")
             .bind(id)
             .fetch_optional(db)
             .await?;
 
-        Ok(recipe_ingredient)
+        Ok(recipe_component_ingredient)
     }
 
     pub async fn update(&self, db: &PgPool) -> Result<(), crate::models::Error> {
         sqlx::query(
-            "UPDATE recipe_ingredients
-             SET recipe_id = $1, ingredient_id = $2, unit_id = $3,
+            "UPDATE recipe_component_ingredients
+             SET recipe_component_id = $1, ingredient_id = $2, unit_id = $3,
                  quantity_numerator = $4, quantity_denominator = $5, is_optional = $6
              WHERE id = $8"
         )
-        .bind(self.recipe_id)
+        .bind(self.recipe_component_id)
         .bind(self.ingredient_id)
         .bind(self.unit_id)
         .bind(self.quantity_numerator)
@@ -94,7 +94,7 @@ impl RecipeIngredient {
     }
 
     pub async fn delete(db: &PgPool, id: i32) -> Result<(), crate::models::Error> {
-        sqlx::query("DELETE FROM recipe_ingredients WHERE id = $1")
+        sqlx::query("DELETE FROM recipe_component_ingredients WHERE id = $1")
             .bind(id)
             .execute(db)
             .await?;
