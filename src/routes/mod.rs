@@ -5,6 +5,7 @@ mod health_check;
 mod homepage;
 mod auth;
 mod protected;
+mod recipes;
 
 pub fn homepage_routes() -> Router {
     Router::new().nest(route_paths::ROOT, homepage::routes())
@@ -20,4 +21,9 @@ pub fn health_check_routes() -> Router {
 
 pub fn protected_routes() -> Router {
     Router::new().nest(route_paths::PROTECTED, protected::routes())
+}
+
+pub fn recipe_routes() -> Router {
+    Router::new().nest(route_paths::RECIPES, recipes::routes::routes())
+
 }

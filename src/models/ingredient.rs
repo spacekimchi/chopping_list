@@ -5,25 +5,20 @@ use sqlx::{FromRow, PgPool};
 pub struct Ingredient {
     pub id: i32,
     pub name: String,
-    pub description: Option<String>,
+    pub description: String,
 }
 
 pub struct CreateIngredientParams {
     pub name: String,
-    pub description: Option<String>,
+    pub description: String,
 }
 
 impl CreateIngredientParams {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, description: String) -> Self {
         Self {
             name,
-            description: None,
+            description,
         }
-    }
-
-    pub fn with_description(mut self, description: String) -> Self {
-        self.description = Some(description);
-        self
     }
 }
 
@@ -120,8 +115,7 @@ impl Ingredient {
     }
 
     async fn add_new_ingredient(db: &PgPool, name: String, description: Option<String>) -> Result<Ingredient, crate::models::Error> {
-        let params = CreateIngredientParams::new(name)
-            .with_description(description.unwrap_or_default());
+        let params = CreateIngredientParams::new(name, description.unwrap_or_default());
 
         Ingredient::create(db, &params).await
     }
@@ -132,7 +126,7 @@ impl Ingredient {
 
     async fn update_ingredient_description(&self, db: &PgPool, new_description: String) -> Result<(), crate::models::Error> {
         if let Some(mut ingredient) = Ingredient::find_by_id(db, self.id).await? {
-            ingredient.description = Some(new_description);
+            ingredient.description = new_description;
             ingredient.update(db).await
         } else {
             Err(crate::models::Error::NotFound)

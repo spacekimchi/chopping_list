@@ -34,8 +34,16 @@ pub fn render_content(render_template_params: &RenderTemplateParams<'_>) -> Resu
     } else {
         context = tera::Context::new();
     }
-
     Ok(render_template_params.tera_store.render(&render_template_params.template_path, &context).map_err(e500)?)
+
+    // This will print the error in the e500 template, but it is not rendering as html for some
+    // reason
+    // render_template_params.tera_store.render(&render_template_params.template_path, &context)
+    //     .map_err(|e| {
+    //         let error_description = format!("{:?}", e);
+    //         let error_message = err_500_template(render_template_params.tera_store, error_description);
+    //         ErrorResponse::InternalServerError(error_message)
+    //     })
 }
 
 pub fn err_500_template<E: std::fmt::Display>(tr: &Arc<tera::Tera>, error: E) -> String {

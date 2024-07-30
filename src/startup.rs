@@ -28,6 +28,7 @@ use crate::routes::health_check_routes;
 use crate::routes::homepage_routes;
 use crate::routes::auth_routes;
 use crate::routes::protected_routes;
+use crate::routes::recipe_routes;
 use crate::user::Backend;
 use crate::constants::strings;
 
@@ -62,7 +63,14 @@ impl Application {
         );
         let listener = TcpListener::bind(address).await?;
         let port = listener.local_addr().unwrap().port();
-        let tera = Tera::new("templates/**/*html")?;
+        let mut tera = match tera::Tera::new("templates/**/*html") {
+            Ok(t) => t,
+            Err(e) => {
+                // Handle error appropriately (e.g., panic or log the error)
+                panic!("Parsing error(s): {}", e);
+            },
+        };
+        tera.autoescape_on(vec!["html", "sql"]);
         let tera = Arc::new(tera);
 
         Ok(Self {
@@ -159,6 +167,7 @@ fn api_router() -> Router {
         .merge(homepage_routes())
         .merge(protected_routes())
         .merge(auth_routes())
+        .merge(recipe_routes())
 }
 
 fn compile_scss_to_css(scss_dir: &str, css_dir: &str) {

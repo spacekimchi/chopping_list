@@ -1,16 +1,16 @@
 -- Insert "admin" user.
 -- Password is 'hunter42'
-INSERT INTO users (id, email, password_hash)
-VALUES (gen_random_uuid(), 'admin', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
+INSERT INTO users (id, email, username, password_hash)
+VALUES (gen_random_uuid(), 'admin', 'admin', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
 
-INSERT INTO users (id, email, password_hash)
-VALUES (gen_random_uuid(), 'basic1@foo.com', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
+INSERT INTO users (id, email, username,  password_hash)
+VALUES (gen_random_uuid(), 'basic1@foo.com', 'basic1', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
 
-INSERT INTO users (id, email, password_hash)
-VALUES (gen_random_uuid(), 'basic2@foo.com', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
+INSERT INTO users (id, email, username, password_hash)
+VALUES (gen_random_uuid(), 'basic2@foo.com', 'basic2', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
 
-INSERT INTO users (id, email, password_hash)
-VALUES (gen_random_uuid(), 'basic3@foo.com', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
+INSERT INTO users (id, email, username, password_hash)
+VALUES (gen_random_uuid(), 'basic3@foo.com', 'basic3', '$argon2id$v=19$m=19456,t=2,p=1$VE0e3g7DalWHgDwou3nuRA$uC6TER156UQpk0lNQ5+jHM0l5poVjPA1he/Tyn9J4Zw');
 
 -- insert admin role
 INSERT INTO roles (name) VALUES ('admin');

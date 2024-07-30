@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
-    user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    description TEXT,
-    is_public BOOLEAN DEFAULT FALSE,
+    description TEXT NOT NULL,
+    is_public BOOLEAN NOT NULL DEFAULT FALSE,
     prep_time INTEGER,
     cook_time INTEGER,
     rest_time INTEGER,

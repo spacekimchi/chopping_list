@@ -9,7 +9,7 @@ use chopping_list::models::ingredient::{Ingredient, CreateIngredientParams};
 use chopping_list::models::recipe_component::{RecipeComponent, CreateRecipeComponentParams};
 use chopping_list::models::recipe_component_ingredient::{RecipeComponentIngredient, CreateRecipeComponentIngredientParams};
 use chopping_list::models::unit;
-use fake::faker::internet::en::SafeEmail;
+use fake::faker::internet::en::{SafeEmail, Username};
 use fake::Fake;
 
 use sqlx::PgPool;
@@ -18,7 +18,7 @@ use sqlx::PgPool;
 async fn main() -> anyhow::Result<()> {
     let configuration = get_configuration().expect("Failed to read configuration");
     let db = get_connection_pool(&configuration.database);
-    let user = create_random_user(&db).await?.expect("Failed to create a new user");
+    let user = get_admin_user(&db).await?;
     unit::create_default_units(&db).await?;
     let _frijoles = seed_habichuelas_guisadas(&db, &user).await?;
     let _kimchi_jjigae = seed_kimchi_jjigae(&db, &user).await?;
@@ -27,8 +27,12 @@ async fn main() -> anyhow::Result<()> {
 }
 
 pub async fn create_random_user(db: &sqlx::PgPool) -> Result<Option<User>, chopping_list::models::Error> {
-    let create_user_params = CreateUserParams::new_with_default_password(fake_email());
+    let create_user_params = CreateUserParams::new_with_default_password(fake_email(), fake_username());
     User::create_user(db, &create_user_params).await
+}
+
+pub async fn get_admin_user(db: &sqlx::PgPool) -> Result<User, chopping_list::models::Error> {
+    Ok(sqlx::query_as("SELECT * FROM users WHERE email = 'admin' LIMIT 1").fetch_one(db).await?)
 }
 
 async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, chopping_list::models::Error> {
@@ -36,7 +40,7 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
     let recipe_params = CreateRecipeParams {
         user_id: user.id,
         name: "Habichuelas Guisadas (Puerto Rican Stewed Beans)".to_string(),
-        description: Some("Habichuelas Guisadas are a Puerto Rican staple, featuring beans stewed in a tomato-based broth infused with country ham, sofrito, sazón, and Mediterranean herbs. This earthy, complex dish pairs beautifully with rice but can also be enjoyed as a standalone meal.".to_string()),
+        description: "Habichuelas Guisadas are a Puerto Rican staple, featuring beans stewed in a tomato-based broth infused with country ham, sofrito, sazón, and Mediterranean herbs. This earthy, complex dish pairs beautifully with rice but can also be enjoyed as a standalone meal.".to_string(),
         is_public: true,
         prep_time: Some(5),
         cook_time: Some(40),
@@ -77,7 +81,7 @@ async fn seed_habichuelas_guisadas(db: &PgPool, user: &User) -> Result<Recipe, c
         let ingredient = match Ingredient::find_by_name(db, name).await? {
             Some(ing) => ing,
             None => {
-                let ing_params = CreateIngredientParams::new(name.to_string());
+                let ing_params = CreateIngredientParams::new(name.to_string(), name.to_string());
                 Ingredient::create(db, &ing_params).await?
             }
         };
@@ -148,7 +152,7 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
     let recipe_params = CreateRecipeParams {
         user_id: user.id,
         name: "Kimchi Stew (Kimchi Jjigae)".to_string(),
-        description: Some("Kimchi Jjigae is a comforting and spicy stew made with kimchi, pork, tofu, and a savory broth. It's perfect for warming up on a cold day and is traditionally enjoyed with a bowl of rice.".to_string()),
+        description: "Kimchi Jjigae is a comforting and spicy stew made with kimchi, pork, tofu, and a savory broth. It's perfect for warming up on a cold day and is traditionally enjoyed with a bowl of rice.".to_string(),
         is_public: true,
         prep_time: Some(20),
         cook_time: Some(35),
@@ -201,7 +205,7 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
         let ingredient = match Ingredient::find_by_name(db, name).await? {
             Some(ing) => ing,
             None => {
-                let ing_params = CreateIngredientParams::new(name.to_string());
+                let ing_params = CreateIngredientParams::new(name.to_string(), name.to_string());
                 Ingredient::create(db, &ing_params).await?
             }
         };
@@ -283,3 +287,6 @@ pub fn fake_email() -> String {
     SafeEmail().fake::<String>()
 }
 
+pub fn fake_username() -> String {
+    Username().fake::<String>()
+}

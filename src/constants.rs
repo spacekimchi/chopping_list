@@ -9,6 +9,8 @@ pub mod html_templates {
     pub const LOGIN: &str = "login.html";
     pub const HOMEPAGE: &str = "homepage.html";
     pub const E500: &str = "500.html";
+    pub const RECIPES_INDEX: &str = "recipes/index.html";
+    pub const RECIPES_SHOW: &str = "recipes/show.html";
 }
 
 /// email templates
@@ -34,5 +36,6 @@ pub mod route_paths {
     pub const LOGOUT: &str = "/logout";
     pub const HEALTH: &str = "/health";
     pub const PROTECTED: &str = "/protected";
+    pub const RECIPES: &str = "/recipes";
 }
 

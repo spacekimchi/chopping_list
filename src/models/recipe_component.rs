@@ -67,7 +67,7 @@ impl RecipeComponent {
     pub async fn update(&self, db: &PgPool) -> Result<(), crate::models::Error> {
         sqlx::query(
             "UPDATE recipe_components
-             SET recipe_id = $1, name = $2, is_optional = $3,
+             SET recipe_id = $1, name = $2, is_optional = $3
              WHERE id = $4"
         )
         .bind(self.recipe_id)

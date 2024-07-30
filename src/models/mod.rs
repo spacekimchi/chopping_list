@@ -17,4 +17,7 @@ pub enum Error {
 
     #[error("Resource not found")]
     NotFound,
+
+    #[error("Resource not found")]
+    Serde(#[from] serde_json::Error),
 }
