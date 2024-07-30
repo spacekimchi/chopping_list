@@ -2,13 +2,14 @@
 name = "chopping_list"
 version = "0.1.0"
 edition = "2021"
+default-run = "chopping_list"
 
 [lib]
 path = "src/lib.rs"
 
 [[bin]]
-path = "src/main.rs"
 name = "chopping_list"
+path = "src/main.rs"
 
 [[bin]]
 name = "seeds"

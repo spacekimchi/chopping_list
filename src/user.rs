@@ -1,16 +1,10 @@
 use async_trait::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
 use password_auth::verify_password;
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgPool};
+use serde::Deserialize;
+use sqlx::PgPool;
 use tokio::task;
-
-#[derive(Clone, Serialize, Deserialize, FromRow)]
-pub struct User {
-    id: uuid::Uuid,
-    pub email: String,
-    password_hash: String,
-}
+use crate::models::user::User;
 
 // Here we've implemented `Debug` manually to avoid accidentally logging the
 // password hash.

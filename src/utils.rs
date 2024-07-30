@@ -9,10 +9,12 @@ pub fn e500<T>(e: T) -> ErrorResponse
 where
     T: Debug + std::fmt::Display + 'static,
 {
-    ErrorResponse::InternalServerError(e.to_string())
+    let error_message = format!("ERROR: {:?}", e);
+    ErrorResponse::InternalServerError(error_message)
 }
 
 // Custom error response struct
+#[derive(Debug, Clone)]
 pub struct ErrorResponse {
     status_code: StatusCode,
     message: String,

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Recipe
+{% endblock title %}
+
+{% block content %}
+    <div>
+        <h2>Name: {{ recipe.name }}</h2>
+        <p>Description: {{ recipe.description }}</p>
+        <h3>About this recipe</h3>
+        <ul>
+            <li>is_public: {{ recipe.is_public }}</li>
+            <li>prep_time: {{ recipe.prep_time }}</li>
+            <li>cook_time: {{ recipe.cook_time }}</li>
+            <li>rest_time: {{ recipe.rest_time }}</li>
+            <li>servings: {{ recipe.servings }}</li>
+            <li>source_url: {{ recipe.source_url }}</li>
+        </ul>
+        <h3>Ingredients</h3>
+        <ul>
+            {% for recipe_component in recipe.recipe_components %}
+                <h4>name: {{ recipe_component.name }}</h4>
+                <h4>is_optional: {{ recipe_component.is_optional }}</h4>
+                <ul>
+                    {% for rci in recipe_component.component_ingredients %}
+                        <li>
+                            {{ rci.name }} {{ rci.quantity_numerator }}/{{ rci.quantity_denominator }} {{ rci.unit }}
+                            <div>description: {{ rci.description }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </ul>
+
+        <h3>Instructions</h3>
+        <ul>
+            {% for recipe_instruction in recipe.recipe_instructions %}
+                <h4>title: {{ recipe_instruction.title }}</h4>
+                <h4>order_idx: {{ recipe_instruction.order_idx }}</h4>
+                <ul>
+                    {% for rci in recipe_instruction.instruction_steps %}
+                        <li>
+                            {{ rci.step_number }}
+                            <div>content: {{ rci.content }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock content %}
+

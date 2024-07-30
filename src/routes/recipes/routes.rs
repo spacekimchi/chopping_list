@@ -1,0 +1,77 @@
+use axum::{
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get, Router,
+    extract::Path,
+};
+use axum::Extension;
+use axum::response::Html;
+use crate::startup::AppState;
+use crate::template_helpers::{render_content, RenderTemplateParams};
+
+use crate::user::AuthSession;
+use crate::models::recipe::Recipe;
+use crate::utils::e500;
+use crate::constants::{
+    route_paths,
+    html_templates,
+};
+
+pub fn routes() -> Router<()> {
+    Router::new()
+        .route(route_paths::ROOT, get(self::get::index))
+        .route("/:recipe_id", get(self::get::show))
+}
+
+mod get {
+    use super::*;
+
+    pub async fn index(auth_session: AuthSession, Extension(state): Extension<AppState>) -> impl IntoResponse {
+        let user = match auth_session.user {
+            Some(user) => user,
+            None => return StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        };
+        let recipes = match user.get_recipes(&state.db).await.map_err(e500) {
+            Ok(recipes) => recipes,
+            Err(err) => return err.into_response()
+        };
+
+        let mut context = tera::Context::new();
+        let boo = "FROM PROTECTED ROUTE";
+        context.insert("recipes", &recipes);
+        context.insert("boo", &boo);
+        match render_content(
+            &RenderTemplateParams::new(html_templates::RECIPES_INDEX, &state.tera)
+            .with_context(&context)
+        ) {
+            Ok(homepage_template) => Html(homepage_template).into_response(),
+            Err(e) => e.into_response()
+        }
+    }
+
+    pub async fn show(
+        auth_session: AuthSession,
+        Extension(state): Extension<AppState>,
+        Path(recipe_id): Path<i32>,
+    ) -> impl IntoResponse {
+        let user = match auth_session.user {
+            Some(user) => user,
+            None => return StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        };
+        let recipe = match Recipe::get_full_recipe_details(&state.db, recipe_id).await.map_err(e500) {
+            Ok(recipe_full_details) => recipe_full_details,
+            Err(err) => return err.into_response(),
+        };
+        let mut context = tera::Context::new();
+        context.insert("recipe", &recipe);
+        match render_content(
+            &RenderTemplateParams::new(html_templates::RECIPES_SHOW, &state.tera)
+            .with_context(&context)
+        ) {
+            Ok(homepage_template) => Html(homepage_template).into_response(),
+            Err(e) => {
+                e.into_response()
+            }
+        }
+    }
+}
