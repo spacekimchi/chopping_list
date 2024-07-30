@@ -7,7 +7,7 @@ use axum::{
 use axum::Extension;
 use axum::response::Html;
 use crate::startup::AppState;
-use crate::template_helpers::{render_content, RenderTemplateParams};
+use crate::template_helpers::{render_content, RenderTemplateParams, err_500_template};
 
 use crate::user::AuthSession;
 use crate::models::recipe::Recipe;
@@ -58,19 +58,19 @@ mod get {
             Some(user) => user,
             None => return StatusCode::INTERNAL_SERVER_ERROR.into_response()
         };
-        let recipe = match Recipe::get_full_recipe_details(&state.db, recipe_id).await.map_err(e500) {
+        let recipe = match Recipe::get_full_recipe_details(&state.db, &user.id, recipe_id).await {
             Ok(recipe_full_details) => recipe_full_details,
-            Err(err) => return err.into_response(),
+            Err(err) => return Html(err_500_template(&state.tera, err)).into_response()
         };
         let mut context = tera::Context::new();
         context.insert("recipe", &recipe);
         match render_content(
             &RenderTemplateParams::new(html_templates::RECIPES_SHOW, &state.tera)
             .with_context(&context)
-        ) {
+        ).map_err(e500) {
             Ok(homepage_template) => Html(homepage_template).into_response(),
-            Err(e) => {
-                e.into_response()
+            Err(err) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, Html(err_500_template(&state.tera, err))).into_response()
             }
         }
     }

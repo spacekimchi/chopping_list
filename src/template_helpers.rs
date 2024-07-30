@@ -34,7 +34,7 @@ pub fn render_content(render_template_params: &RenderTemplateParams<'_>) -> Resu
     } else {
         context = tera::Context::new();
     }
-    Ok(render_template_params.tera_store.render(&render_template_params.template_path, &context).map_err(e500)?)
+    Ok(render_template_params.tera_store.render(&render_template_params.template_path, &context)?)
 
     // This will print the error in the e500 template, but it is not rendering as html for some
     // reason
