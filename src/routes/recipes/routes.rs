@@ -1,11 +1,12 @@
 use axum::{
     http::StatusCode,
     response::IntoResponse,
-    routing::get, Router,
-    extract::Path,
+    routing::{get, post}, Router,
+    extract::{Path, Json},
 };
 use axum::Extension;
 use axum::response::Html;
+use serde::Deserialize;
 use crate::startup::AppState;
 use crate::template_helpers::{render_content, RenderTemplateParams, err_500_template};
 
@@ -21,6 +22,30 @@ pub fn routes() -> Router<()> {
     Router::new()
         .route(route_paths::ROOT, get(self::get::index))
         .route("/:recipe_id", get(self::get::show))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ExtensionRecipeParams {
+    pub content: String,
+}
+
+mod post {
+    use super::*;
+
+    pub async fn create_from_extension(
+        mut auth_session: AuthSession,
+        Extension(state): Extension<AppState>,
+        Json(recipe_params): Json<ExtensionRecipeParams>,
+    ) -> impl IntoResponse {
+        let user = match auth_session.user {
+            Some(user) => user,
+            None => return StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        };
+
+
+
+        "".into_response()
+    }
 }
 
 mod get {

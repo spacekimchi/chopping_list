@@ -103,6 +103,11 @@ The application is set up to create an initial user with the admin role. The nam
 
 Run tests with the command `cargo test`
 
+## Test debugging
+
+[about:debugging](https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html)
+[about:debugging](about:debugging)
+
 If you want to run a certain test, you can specify the name of the test.
  - Ex: `cargo test authorized_user_creation` will run tests with names that match `authorized_user_creation`
    - Ex: `authorized_user_creation` and `unauthorized_user_creation` both match `authorized_user_creation`
