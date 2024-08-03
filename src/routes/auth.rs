@@ -4,6 +4,7 @@ use axum::{
     response::{IntoResponse, Redirect},
     routing::{get, post},
     Form, Router,
+    Json,
 };
 use axum::Extension;
 use axum::response::Html;
@@ -15,8 +16,10 @@ use secrecy::Secret;
 use crate::utils::e500;
 use crate::telemetry;
 use password_auth::generate_hash;
+use serde_json::json;
+use uuid::Uuid;
 
-use crate::user::{AuthSession, Credentials};
+use crate::user::{AuthSession, Credentials, Backend};
 use crate::domain::{NewUser, UserEmail, UserPassword};
 use crate::emailer;
 use crate::constants::{
@@ -52,13 +55,14 @@ impl TryFrom<RegistrationForm> for NewUser {
     }
 }
 
-pub fn routes() -> Router<()> {
+pub fn routes() -> Router {
     Router::new()
         .route(route_paths::LOGIN, post(self::post::login))
         .route(route_paths::REGISTER, get(self::get::register))
         .route(route_paths::REGISTER, post(self::post::register))
         .route(route_paths::LOGIN, get(self::get::login))
         .route(route_paths::LOGOUT, get(self::get::logout))
+        .route("/generate_api_key", post(self::post::generate_api_key))
 }
 
 mod post {
@@ -153,6 +157,21 @@ mod post {
             Redirect::to(route_paths::ROOT)
         }
         .into_response()
+    }
+
+    pub async fn generate_api_key(
+        auth_session: AuthSession,
+        Extension(state): Extension<AppState>,
+    ) -> impl IntoResponse {
+        if let Some(mut user) = auth_session.user {
+            // User is authenticated via session
+            match user.generate_api_key(&state.db).await {
+                Ok(token) => (StatusCode::OK, Json(json!({ "token": token }))).into_response(),
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
+        } else {
+            StatusCode::UNAUTHORIZED.into_response()
+        }
     }
 }
 

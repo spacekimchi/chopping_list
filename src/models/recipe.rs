@@ -56,12 +56,12 @@ pub struct FullRecipeComponent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FullRecipeComponentIngredient {
     pub ingredient_id: i32,
+    pub name: String,
+    pub description: String,
     pub unit: String,
     pub quantity_numerator: i32,
     pub quantity_denominator: i32,
     pub is_optional: bool,
-    pub name: String,
-    pub description: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -18,7 +18,7 @@ use crate::constants::{
     html_templates,
 };
 
-pub fn routes() -> Router<()> {
+pub fn routes() -> Router {
     Router::new()
         .route(route_paths::ROOT, get(self::get::index))
         .route("/:recipe_id", get(self::get::show))

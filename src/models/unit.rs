@@ -48,6 +48,16 @@ pub struct CreateUnitParams {
     pub system: UnitSystem,
 }
 
+impl CreateUnitParams {
+    pub fn new(name: &String) -> Self {
+        Self {
+            name: name.clone(),
+            abbreviation: None,
+            system: UnitSystem::Universal,
+        }
+    }
+}
+
 impl Unit {
     pub async fn create(db: &PgPool, params: &CreateUnitParams) -> Result<Self, crate::models::Error> {
         let unit = sqlx::query_as(

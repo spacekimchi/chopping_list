@@ -53,6 +53,37 @@ impl User {
         Ok(user)
     }
 
+    pub async fn find_by_email(db: &PgPool, email: &String) -> Result<User, crate::models::Error> {
+        println!("\n\n\nI AM TRYING TO GET THE USER NOW\n\n\n");
+        let user = sqlx::query_as("SELECT id, username, email, password_hash FROM users WHERE email = $1")
+            .bind(email.clone())
+            .fetch_one(db)
+            .await?;
+        println!("\n\n\nI FOUND A USER IN USR MODEL: {:?}\n\n\n", user);
+
+        Ok(user)
+    }
+
+    pub async fn find_by_api_key(db: &PgPool, api_key: &str) -> Result<Option<User>, crate::models::Error> {
+        let user = sqlx::query_as("SELECT id, username, email, password_hash, api_key FROM users WHERE api_key = $1")
+            .bind(api_key)
+            .fetch_optional(db)
+            .await?;
+
+        Ok(user)
+    }
+
+    pub async fn generate_api_key(&mut self, db: &PgPool) -> Result<String, crate::models::Error> {
+        let api_key = uuid::Uuid::new_v4().to_string();
+        sqlx::query("UPDATE users SET api_key = $1 WHERE id = $2")
+            .bind(&api_key)
+            .bind(self.id)
+            .execute(db)
+            .await?;
+
+        Ok(api_key)
+    }
+
     pub async fn update(&self, db: &PgPool) -> Result<(), crate::models::Error> {
         sqlx::query(
             "UPDATE users
