@@ -35,3 +35,15 @@ impl IntoResponse for ErrorResponse {
         (self.status_code, self.message).into_response()
     }
 }
+
+impl From<tera::Error> for ErrorResponse {
+    fn from(err: tera::Error) -> Self {
+        ErrorResponse::InternalServerError(format!("Template rendering error: {:?}", err))
+    }
+}
+
+impl std::fmt::Display for ErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error ({}): {}", self.status_code, self.message)
+    }
+}

@@ -95,13 +95,70 @@ Instead, we can use vanilla Javascript and HTMX to get a SPA feeling.
 
 Add javascript files to /static/js/ directory and include them in the html wherever they are needed
 
-## Roles
+## Creating Full Recipes
 
-The application is set up to create an initial user with the admin role. The name can be changed by looking at the `migrations/20240721170003_seed_users.sql` file.
+In order to create recipes, we need to have these data:
+
+For Recipe
+ - name, description, prep_time, cook_time, rest_time, servings, source_url
+
+For RecipeComponent
+ - name, is_optional
+
+For RecipeComponentIngredient
+ - name, description, unit, quantity_numerator, quantity_denominator, is_optional
+
+For RecipeInstruction
+ - order_idx (instruction order), title
+
+For RecipeInstructionStep
+ - step_number, content
+
+A good prompt to ask the AI is something like
+```
+Parse this recipe and tell me the name, a description, prep time, cook time, rest time, servings (if servings isn't, make an educated guess).
+Also tell me the ingredients for the recipe. I want to know the component, and then list the ingredients under it. From the ingredients give me the name, a short description of the ingredient, the quantity numerator, quantity denominator, the unit, and if it is optional
+Also tell me the recipe instructions. Please provide the instructions with two levels of detail. The first level should be the title of the instruction, and the second level should be the steps for that instruction.
+Give me the recipe, recipe component, and recipe instructions in json format and nothing else. This is the JSON format i want:
+{
+  name: string,
+  description: string,
+  prep_time: i32,
+  cook_time: i32,
+  rest_time: i32,
+  servings: i32,
+  recipe_component: {
+    name: string,
+    is_optional: boolean,
+    component_ingredients: [{
+      name: string,
+      description: string,
+      unit: string,
+      quantity_numerator: i32,
+      quantity_denominator: i32,
+      is_optional: bool,
+    }]
+  },
+  recipe_instructions: {
+    order_idx: i32,
+    title: string,
+    instruction_step: [{
+      step_number: i32,
+      content: i32
+    }]
+  }
+}
+And finally, please include any tips and tricks.
+```
 
 ## Tests
 
 Run tests with the command `cargo test`
+
+## Test debugging
+
+[about:debugging](https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html)
+[about:debugging](about:debugging)
 
 If you want to run a certain test, you can specify the name of the test.
  - Ex: `cargo test authorized_user_creation` will run tests with names that match `authorized_user_creation`

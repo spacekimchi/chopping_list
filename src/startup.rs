@@ -10,6 +10,7 @@ use tower_http::trace::TraceLayer;
 use std::sync::Arc;
 use tera::Tera;
 use tower_http::services::{ServeDir, ServeFile};
+use tower_http::cors::{Any, CorsLayer};
 use std::fs;
 use std::path::Path;
 use axum_login::{
@@ -29,6 +30,7 @@ use crate::routes::homepage_routes;
 use crate::routes::auth_routes;
 use crate::routes::protected_routes;
 use crate::routes::recipe_routes;
+use crate::routes::api_routes;
 use crate::user::Backend;
 use crate::constants::strings;
 
@@ -119,6 +121,7 @@ pub async fn run(db_pool: PgPool, listener: TcpListener, _base_url: String, _red
         .continuously_delete_expired(tokio::time::Duration::from_secs(60)),
     );
 
+
     // Generate a cryptographic key to sign the session cookie.
     // let key = Key::generate();
     // TODO: Need to secure cookie
@@ -132,17 +135,18 @@ pub async fn run(db_pool: PgPool, listener: TcpListener, _base_url: String, _red
     // service which will provide the auth session as a request extension.
     let backend = Backend::new(db_pool.clone());
     let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
+    let app_state = AppState {
+        db: db_pool,
+        hmac_secret,
+        tera,
+        email_settings,
+    };
 
-    let app = api_router()
+    let app = api_router(&app_state)
         .layer(TraceLayer::new_for_http())
         .layer(
             Extension(
-                AppState {
-                    db: db_pool,
-                    hmac_secret,
-                    tera,
-                    email_settings,
-                }
+                app_state
             )
         )
         .layer(MessagesManagerLayer)
@@ -155,11 +159,18 @@ pub async fn run(db_pool: PgPool, listener: TcpListener, _base_url: String, _red
     Ok(())
 }
 
-fn api_router() -> Router {
+fn api_router(app_state: &AppState) -> Router {
     // The ServeDir directory will allow the application to access these files and its
     // subdirectories
     let service = ServeDir::new("public")
         .fallback(ServeFile::new("public/file_not_found.html"));
+    // CORS layer
+    let cors = CorsLayer::new()
+    // allow `GET` and `POST` when accessing the resource
+        .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::OPTIONS])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers([axum::http::header::CONTENT_TYPE]);
 
     Router::new()
         .nest_service("/public", service)
@@ -168,6 +179,8 @@ fn api_router() -> Router {
         .merge(protected_routes())
         .merge(auth_routes())
         .merge(recipe_routes())
+        .merge(api_routes(app_state))
+        .layer(cors)
 }
 
 fn compile_scss_to_css(scss_dir: &str, css_dir: &str) {

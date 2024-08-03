@@ -11,3 +11,4 @@ pub mod domain;
 pub mod emailer;
 pub mod constants;
 pub mod models;
+pub mod middleware;

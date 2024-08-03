@@ -278,7 +278,7 @@ async fn seed_kimchi_jjigae(db: &PgPool, user: &User) -> Result<Recipe, chopping
     let tags = vec!["Korean", "Stew", "Spicy", "Kimchi"];
     for tag_name in tags {
         recipe.add_tag(db, tag_name).await?;
-        }
+    }
 
     Ok(recipe)
 }
