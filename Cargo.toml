@@ -83,6 +83,9 @@ futures = "0.3.30"
 
 reqwest = { version = "0.12.5", features = ["json", "cookies", "rustls-tls", "stream"] }
 regex = "1.10.5"
+rand = "0.8.5"
+sha2 = "0.10.8"
+hex = "0.4.3"
 
 [dev-dependencies]
 # Part of tracing for tests

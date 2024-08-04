@@ -21,6 +21,7 @@ use axum_login::{
 use axum_messages::MessagesManagerLayer;
 use tokio::{signal, task::AbortHandle};
 use tower_sessions_sqlx_store::PostgresStore;
+use reqwest::header::HeaderValue;
 
 use crate::configuration::Settings;
 use crate::configuration::DatabaseSettings;
@@ -166,11 +167,25 @@ fn api_router(app_state: &AppState) -> Router {
         .fallback(ServeFile::new("public/file_not_found.html"));
     // CORS layer
     let cors = CorsLayer::new()
-    // allow `GET` and `POST` when accessing the resource
+        // allow `GET` and `POST` when accessing the resource
         .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::OPTIONS])
         // allow requests from any origin
         .allow_origin(Any)
-        .allow_headers([axum::http::header::CONTENT_TYPE]);
+        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+
+    // TODO: PUT BACK CORS SAME-SITE WHEN DEPLOYING
+    // CORS layer
+    // let origins = [
+    //     "http://localhost".parse().unwrap(),
+    //     "http://localhost:8000".parse().unwrap(),
+    //     "http://localhost:8000".parse().unwrap(),
+    // ];
+    // let cors = CorsLayer::new()
+    //     .allow_origin("http://localhost:8000/*".parse::<HeaderValue>().unwrap())
+    //     .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::OPTIONS])
+    //     .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION])
+    //     .allow_credentials(true);
+
 
     Router::new()
         .nest_service("/public", service)
