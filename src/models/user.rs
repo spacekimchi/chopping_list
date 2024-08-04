@@ -54,12 +54,10 @@ impl User {
     }
 
     pub async fn find_by_email(db: &PgPool, email: &String) -> Result<User, crate::models::Error> {
-        println!("\n\n\nI AM TRYING TO GET THE USER NOW\n\n\n");
         let user = sqlx::query_as("SELECT id, username, email, password_hash FROM users WHERE email = $1")
             .bind(email.clone())
             .fetch_one(db)
             .await?;
-        println!("\n\n\nI FOUND A USER IN USR MODEL: {:?}\n\n\n", user);
 
         Ok(user)
     }

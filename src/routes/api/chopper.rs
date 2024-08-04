@@ -44,7 +44,7 @@ pub struct ChopperResponse {
 pub fn routes(state: &AppState) -> Router {
     Router::new()
         .route(route_paths::CHOPPER, post(self::post::chopper))
-        .layer(axum::middleware::from_fn_with_state(state.clone(), crate::middleware::api_auth::api_key_auth))
+        
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -172,9 +172,16 @@ mod post {
     #[axum::debug_handler]
     pub async fn chopper(
         Extension(state): Extension<AppState>,
-        user: axum::extract::Extension<User>,
+        _auth_session: AuthSession,
         Json(payload): Json<ChopperRequest>,
     ) -> impl IntoResponse {
+
+        let user = match User::find_by_email(&state.db, &"admin".to_string()).await {
+            Ok(user) => user,
+            Err(err) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Error: {}", err)).into_response()
+            }
+        };
         let recipe = match parse_recipe_with_openai(&payload, &state).await {
             Ok(recipe) => {
                 recipe
@@ -195,12 +202,10 @@ mod post {
 async fn parse_recipe_with_openai(chopper_request: &ChopperRequest, _state: &AppState) -> Result<ChopperRecipe, Box<dyn std::error::Error>> {
     let openai_api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
 
-    println!("Creating HTTP client...");
     let client = Client::builder()
         .timeout(Duration::from_secs(30))
         .build()?;
 
-    println!("Preparing request...");
     let request_body = json!({
         "model": "gpt-4o-mini",
         "messages": [{
@@ -212,17 +217,13 @@ async fn parse_recipe_with_openai(chopper_request: &ChopperRequest, _state: &App
 
     println!("Request body: {}", serde_json::to_string_pretty(&request_body)?);
 
-    println!("Sending request to OpenAI...");
     let response = client.post("https://api.openai.com/v1/chat/completions")
         .header("Authorization", format!("Bearer {}", openai_api_key))
         .json(&request_body)
         .send()
         .await?;
 
-    println!("Response status: {:?}", response.status());
-
     let response_text = response.text().await?;
-    println!("Response body: {}", response_text);
 
     // Parse the JSON response
     let parsed_response: Value = serde_json::from_str(&response_text)?;
@@ -239,8 +240,6 @@ async fn parse_recipe_with_openai(chopper_request: &ChopperRequest, _state: &App
     } else {
         content
     };
-
-    println!("Received JSON: {}", json_str);
 
     let recipe_value: serde_json::Value = serde_json::from_str(json_str)?;
 
